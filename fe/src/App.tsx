@@ -4,10 +4,11 @@ import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/RegisterPasge';
 
-//const isAuthenticated = () => !!localStorage.getItem('access_token');
-const isAuthenticated = true;
+const isAuthenticated = () => !!localStorage.getItem('access_token');
+console.log('Auth status:', isAuthenticated());
+
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  return isAuthenticated() ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 const App = () => {

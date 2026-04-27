@@ -1,11 +1,13 @@
 // src/pages/LoginPage.tsx
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { Shield, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
+  const token = localStorage.getItem('access_token');
+  if (token) return <Navigate to="/dashboard" replace />;
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: '', password: '' });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -64,14 +66,14 @@ const LoginPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
               <label className="text-slate-400 text-xs uppercase tracking-wider mb-2 block">
-                Username
+                Email
               </label>
               <input
                 type="text"
-                value={form.username}
-                onChange={e => setForm({ ...form, username: e.target.value })}
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
-                placeholder="Nhập username"
+                placeholder="Nhập email"
                 required
               />
             </div>
