@@ -26,3 +26,17 @@ export interface SystemStats {
     cpuTemp?: number;
     gpuUsage?: number;
 }
+
+export interface Device {
+    id: number;
+    device_name: string;
+    description?: string;
+    status: 'online' | 'offline';
+    last_ip?: string;
+    last_seen?: string;
+    created_at: string;
+}
+
+export interface DeviceWithKey extends Device {
+    device_key: string;
+}

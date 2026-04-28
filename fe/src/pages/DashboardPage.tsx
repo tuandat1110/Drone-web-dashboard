@@ -1,13 +1,18 @@
+// src/pages/DashboardPage.tsx
 import React, { useState, useEffect } from 'react';
 import { Cpu, Plane } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/layouts/Header';
 import VideoPanel from '../components/videos/VideoPanel';
 import VideoControls from '../components/videos/VideoControl';
 import DetectionLog from '../components/detections/DetectionLog';
 import StatCard from '../components/stats/StatCard';
-import type { DetectionEvent } from '../types';
-import { useWebRTC } from '../hooks/useWebRTC';
 import UserMenu from '../components/menu/UserMenu';
+import DeviceSelector from '../components/devices/DeviceSelector';
+import CreateDeviceModal from '../components/devices/CreateDeviceModal';
+import { useWebRTC } from '../hooks/useWebRTC';
+import type { DetectionEvent, Device } from '../types';
+import { useDevices } from '../hooks/useDevice';
 
 export interface UserInfo {
     id: string | number;
@@ -30,42 +35,100 @@ const fakeDetections: DetectionEvent[] = [
 
 const DashboardPage: React.FC = () => {
     const url = import.meta.env.VITE_API_URL;
-    const { stream, status, connect, disconnect } = useWebRTC({
-        signalingUrl: url + '/signaling',
-        autoConnect: true,
-    });
+    const navigate = useNavigate();
 
+    // User
     const [user, setUser] = useState<UserInfo | null>(null);
-
     useEffect(() => {
         try {
             const raw = localStorage.getItem('user');
             if (raw) setUser(JSON.parse(raw));
-        } catch {
-            // ignore malformed data
-        }
+        } catch { /* ignore */ }
     }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('user');
         localStorage.removeItem('access_token');
-        // Redirect to login — adjust path to match your router setup
-        window.location.href = '/login';
+        localStorage.removeItem('selected_device');
+        navigate('/login', { replace: true });
     };
+
+    // Devices
+    const { devices, createDevice } = useDevices();
+    console.log(`devices: ${JSON.stringify(devices)}`);
+    //const devices: any[] = [];
+    const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+
+    // Restore selected device from localStorage
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem('selected_device');
+            if (raw) setSelectedDevice(JSON.parse(raw));
+        } catch { /* ignore */ }
+    }, []);
+
+    // Auto-select first online device if none selected
+    useEffect(() => {
+        if (!selectedDevice && devices.length > 0) {
+            const firstOnline = devices.find(d => d.status === 'online');
+            if(!!firstOnline) {
+                setSelectedDevice(firstOnline);
+                localStorage.setItem('selected_device', JSON.stringify(firstOnline));
+            }
+        } else if (devices.length === 0) {
+            setSelectedDevice(null);
+            localStorage.removeItem('selected_device');
+        }
+    }, [devices, selectedDevice]);
+
+    console.log(`Selected device: ${JSON.stringify(selectedDevice)}`);
+
+    const handleSelectDevice = (device: Device) => {
+        setSelectedDevice(device);
+        localStorage.setItem('selected_device', JSON.stringify(device));
+    };
+
+    //WebRTC — signalingUrl thay đổi theo device được chọn
+    const signalingUrl = selectedDevice
+        ? `${url}/signaling?deviceId=${selectedDevice.id}`
+        : `${url}/signaling`;
+
+    console.log(`Signaling URL: ${signalingUrl}`);
+
+    //const signalingUrl = `${url}/signaling`;
+
+    const { stream, status, connect, disconnect } = useWebRTC({
+        signalingUrl,
+        autoConnect: !!selectedDevice,
+    });
 
     const isConnected = status === 'live';
 
     return (
         <div className="flex flex-col h-screen bg-slate-950 text-slate-100 overflow-hidden">
-            {/* Pass user + logout into Header, or render inline — choose one approach */}
             <Header isConnected={isConnected} />
 
-            {/* If your Header doesn't accept these props yet, render a secondary bar here */}
-            {user && (
-                <div className="flex justify-end items-center px-4 py-1.5 bg-slate-900/60 border-b border-slate-800">
-                    <UserMenu user={user} onLogout={handleLogout} />
+            {/* Sub-bar: device selector + user menu */}
+            <div className="flex items-center justify-between px-4 py-1.5 bg-slate-900/60 border-b border-slate-800 shrink-0">
+                <div className="flex items-center gap-3">
+                    <DeviceSelector
+                        devices={devices}
+                        selected={selectedDevice}
+                        onSelect={handleSelectDevice}
+                        onAddNew={() => setShowCreateModal(true)}
+                    />
+                    {/* Manage devices link */}
+                    <button
+                        onClick={() => navigate('/devices')}
+                        className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                    >
+                        Quản lý thiết bị →
+                    </button>
                 </div>
-            )}
+
+                {user && <UserMenu user={user} onLogout={handleLogout} />}
+            </div>
 
             <main className="flex-1 grid grid-cols-12 gap-4 p-4 overflow-hidden">
                 <section className="col-span-12 lg:col-span-8 flex flex-col gap-4 overflow-hidden">
@@ -80,6 +143,13 @@ const DashboardPage: React.FC = () => {
                     <DetectionLog detections={fakeDetections} />
                 </section>
             </main>
+
+            {/* {showCreateModal && (
+                <CreateDeviceModal
+                    onClose={() => setShowCreateModal(false)}
+                    onCreate={createDevice}
+                />
+            )} */}
         </div>
     );
 };

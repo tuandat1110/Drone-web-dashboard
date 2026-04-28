@@ -34,6 +34,9 @@ model Device {
   last_seen   DateTime?
   created_at  DateTime  @default(now())
 
+  description String?   // mô tả vị trí đặt camera, ví dụ "Cổng A - tầng 3"
+  updated_at  DateTime  @updatedAt
+
   user        User      @relation(fields: [user_id], references: [id])
   user_id     Int
 
@@ -45,6 +48,10 @@ model Detection {
   drone_count   Int
   bounding_boxes Json?   // raw data từ YOLO nếu cần lưu
   timestamp     DateTime @default(now())
+
+  confidence_avg Float?   // confidence trung bình của frame đó
+  frame_id       String?  // để trace lại frame nếu cần debug
+  thumbnail_url  String?  // ảnh crop frame lúc detect (nếu Jetson gửi lên S3/local)
 
   device        Device   @relation(fields: [device_id], references: [id])
   device_id     Int

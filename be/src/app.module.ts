@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { SignalingModule } from './signaling/signaling.module';
+import { DevicesModule } from './devices/devices.module';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { SignalingModule } from './signaling/signaling.module';
     AuthModule, 
     UserModule, 
     PrismaModule,
-    SignalingModule
+    SignalingModule,
+    DevicesModule
   ],
   controllers: [AppController],
   providers: [AppService],

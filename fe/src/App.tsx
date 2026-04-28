@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/RegisterPasge';
+import DevicesPage from './pages/DevicePage';
 
 const isAuthenticated = () => !!localStorage.getItem('access_token');
 console.log('Auth status:', isAuthenticated());
@@ -19,6 +20,11 @@ const App = () => {
       <Route path="/dashboard" element={
         <PrivateRoute>
           <DashboardPage />
+        </PrivateRoute>
+      } />
+      <Route path="/devices" element={
+        <PrivateRoute>
+          <DevicesPage />
         </PrivateRoute>
       } />
       <Route path="*" element={<Navigate to="/login" replace />} />

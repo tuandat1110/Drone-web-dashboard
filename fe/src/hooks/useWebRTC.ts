@@ -79,6 +79,11 @@ export function useWebRTC({ signalingUrl, autoConnect = true }: UseWebRTCOptions
         const socket: Socket = io(signalingUrl, {
             transports: ['websocket'],
             forceNew: true,
+            auth: {
+                'type': 'viewer',
+                'token': localStorage.getItem('access_token') || undefined,
+                'deviceId': JSON.parse(localStorage.getItem('selected_device') || 'null')?.id || undefined,
+            }
         });
 
         socketRef.current = socket;
@@ -150,7 +155,7 @@ export function useWebRTC({ signalingUrl, autoConnect = true }: UseWebRTCOptions
             socketRef.current?.disconnect();
             cleanup();
         };
-    }, []);
+    }, [autoConnect, connect, cleanup]);
 
     return { stream, status, connect, disconnect };
 }
